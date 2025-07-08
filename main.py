@@ -7,6 +7,7 @@ def parse_cli_args(args=None):
     argparser.add_argument('--file', help='Source file path. Required')
     argparser.add_argument('--where', help='Filter condition as field_name{=,<,>}value')
     argparser.add_argument('--aggregate', help='Aggregate function as field_name={avg,min,max}. Only numeric fields.')
+    argparser.add_argument('--order-by', help='Sorting field_name={asc,desc}')
     return argparser.parse_args(args)
 
 
@@ -83,6 +84,12 @@ def aggregate_data(data, condition):
     return locals()[function]()
 
 
+def order_data(data, condition):
+    field = condition.split('=')[0]
+    reverse = condition.split('=')[1] == 'desc'
+    return  sorted(data, key=lambda row:row[field], reverse=reverse)
+
+
 def read_data(filename):
     data = []
     with open(filename) as products:
@@ -96,8 +103,12 @@ def read_data(filename):
 def main(args=None):
     args = parse_cli_args(args)
     data = read_data(args.file)
+
     if args.where:
         data = filter_data(data, args.where)
+
+    if args.order_by:
+        data = order_data(data, args.order_by)
 
     if args.aggregate:
         data = aggregate_data(data, args.aggregate)
